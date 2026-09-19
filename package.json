@@ -1,0 +1,38 @@
+{
+  "name": "cleandrop",
+  "version": "1.0.0",
+  "description": "Smart, safe, and lightning-fast downloads and desktop auto-organizer with dry-run and undo support.",
+  "type": "module",
+  "main": "src/organizer.js",
+  "bin": {
+    "cleandrop": "./bin/cleandrop.js"
+  },
+  "scripts": {
+    "start": "node ./bin/cleandrop.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mahdyarmonfared/cleandrop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mahdyarmonfared/cleandrop/issues"
+  },
+  "homepage": "https://github.com/mahdyarmonfared/cleandrop#readme",
+  "keywords": [
+    "cli",
+    "file-organizer",
+    "desktop-cleaner",
+    "downloads-organizer",
+    "productivity",
+    "nodejs",
+    "developer-tools"
+  ],
+  "author": "Mahdyar Monfared (https://github.com/mahdyarmonfared)",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "ora": "^8.2.0"
+  }
+}

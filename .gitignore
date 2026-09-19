@@ -1,0 +1,5 @@
+node_modules/
+.cleandrop-history.json
+*.log
+.DS_Store
+dist/
