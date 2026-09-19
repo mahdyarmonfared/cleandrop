@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org)
-[![Tests](https://img.shields.io/badge/tests-passing-success.svg)](https://github.com)
+[![CI Status](https://github.com/mahdyarmonfared/cleandrop/actions/workflows/ci.yml/badge.svg)](https://github.com/mahdyarmonfared/cleandrop/actions)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com)
 
 
@@ -134,8 +134,8 @@ npm test
 ---
 
 ## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/mahdyarmonfared/cleandrop/issues).
+ 
+Contributions, issues, and feature requests are welcome! Please check the [contributing guidelines](CONTRIBUTING.md) and [issues page](https://github.com/mahdyarmonfared/cleandrop/issues).
 
 ---
 
