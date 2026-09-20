@@ -50,17 +50,28 @@ export async function getUniqueDestinationPath(targetDir, originalName) {
   }
 }
 
+const CATEGORY_META = {
+  Documents: { icon: '📄', color: chalk.blue },
+  Images: { icon: '🖼️ ', color: chalk.magenta },
+  Videos: { icon: '🎬', color: chalk.cyan },
+  Audio: { icon: '🎵', color: chalk.yellow },
+  Archives: { icon: '📦', color: chalk.red },
+  Code: { icon: '💻', color: chalk.green },
+  Installers: { icon: '💿', color: chalk.hex('#f97316') },
+  Others: { icon: '📁', color: chalk.gray }
+};
+
 /**
  * Print a visually polished summary of the operation
  */
 export function printSummary({ moves, dryRun, totalBytes }) {
-  console.log('\n' + chalk.bold.cyan('━'.repeat(50)));
-  console.log(chalk.bold.cyan(`  CleanDrop Summary ${dryRun ? chalk.yellow('[DRY RUN]') : chalk.green('[COMPLETED]')}`));
-  console.log(chalk.bold.cyan('━'.repeat(50)));
+  const badge = dryRun ? chalk.bgYellow.black(' DRY RUN ') : chalk.bgGreen.black(' COMPLETED ');
+
+  console.log('\n' + chalk.dim('╭─ ') + chalk.bold.cyan('CleanDrop Summary ') + badge + chalk.dim(' ' + '─'.repeat(24) + '╮'));
 
   if (moves.length === 0) {
-    console.log(chalk.yellow('  ✨ No files needed to be moved. The folder is already clean!'));
-    console.log(chalk.bold.cyan('━'.repeat(50)) + '\n');
+    console.log(chalk.dim('│') + chalk.green('  ✨ Folder is already organized! No loose files found.'));
+    console.log(chalk.dim('╰' + '─'.repeat(52) + '╯\n'));
     return;
   }
 
@@ -71,14 +82,19 @@ export function printSummary({ moves, dryRun, totalBytes }) {
   }
 
   for (const [cat, count] of Object.entries(categoryCounts)) {
-    console.log(`  📂 ${chalk.bold.white(cat.padEnd(14))}: ${chalk.green(count)} file(s)`);
+    const meta = CATEGORY_META[cat] || { icon: '📁', color: chalk.white };
+    const label = `${meta.icon} ${cat}`.padEnd(16);
+    console.log(chalk.dim('│') + `  ${meta.color(label)} : ${chalk.bold.white(count)} file(s)`);
   }
 
-  console.log(chalk.gray('  ' + '─'.repeat(46)));
-  console.log(`  📊 ${chalk.bold('Total Files')}   : ${chalk.bold.yellow(moves.length)}`);
-  console.log(`  💾 ${chalk.bold('Total Size')}    : ${chalk.bold.yellow(formatBytes(totalBytes))}`);
+  console.log(chalk.dim('├' + '─'.repeat(52) + '┤'));
+  console.log(chalk.dim('│') + `  📊 ${chalk.bold('Total Files')}   : ${chalk.bold.cyan(moves.length)}`);
+  console.log(chalk.dim('│') + `  💾 ${chalk.bold('Total Size')}    : ${chalk.bold.cyan(formatBytes(totalBytes))}`);
+
   if (dryRun) {
-    console.log(`\n  ${chalk.magenta('ℹ')} ${chalk.italic('No files were modified. Run without --dry-run to apply changes.')}`);
+    console.log(chalk.dim('│'));
+    console.log(chalk.dim('│') + `  ${chalk.yellow('ℹ')} ${chalk.dim('Preview only. Run without --dry-run to apply changes.')}`);
   }
-  console.log(chalk.bold.cyan('━'.repeat(50)) + '\n');
+
+  console.log(chalk.dim('╰' + '─'.repeat(52) + '╯\n'));
 }
