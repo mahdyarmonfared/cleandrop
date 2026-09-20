@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { Command } from 'commander';
 import chalk from 'chalk';
@@ -8,12 +9,13 @@ import { organizeDirectory } from '../src/organizer.js';
 import { undoLastRun } from '../src/history.js';
 import { printSummary } from '../src/utils.js';
 
+const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 const program = new Command();
 
 program
   .name('cleandrop')
   .description('⚡ Smart, safe, and lightning-fast downloads and desktop auto-organizer.')
-  .version('1.0.0')
+  .version(pkg.version)
   .argument('[directory]', 'Target directory to organize', '.')
   .option('-d, --dry-run', 'Preview changes without actually moving any files')
   .option('-u, --undo', 'Undo the last organization run in the specified directory')
@@ -21,7 +23,7 @@ program
   .action(async (directory, options) => {
     const targetDir = path.resolve(directory);
 
-    console.log(chalk.bold.blue('\n📦 CleanDrop v1.0.0'));
+    console.log(chalk.bold.blue(`\n📦 CleanDrop v${pkg.version}`));
     console.log(chalk.gray(`Target: ${targetDir}\n`));
 
     // Handle Undo
