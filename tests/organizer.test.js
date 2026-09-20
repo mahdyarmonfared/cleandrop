@@ -79,3 +79,34 @@ test('CleanDrop full lifecycle: Dry-Run, Organize, and Undo', async (t) => {
     await fs.rm(testDir, { recursive: true, force: true });
   }
 });
+
+test('CleanDrop undo safely handles collisions if a new file appears at original location', async () => {
+  const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cleandrop-collision-test-'));
+
+  try {
+    // 1. Setup sample file and organize it
+    await fs.writeFile(path.join(testDir, 'photo.jpg'), 'original photo content');
+    await organizeDirectory(testDir, { dryRun: false });
+
+    // 2. Simulate a brand new file being created at the original path before undo
+    await fs.writeFile(path.join(testDir, 'photo.jpg'), 'brand new photo content placed after organize');
+
+    // 3. Perform undo
+    const undoResult = await undoLastRun(testDir);
+    assert.ok(undoResult.success);
+    assert.equal(undoResult.revertedCount, 1);
+
+    // 4. Verify both the new file and restored file exist without overwrite!
+    const files = await fs.readdir(testDir);
+    assert.ok(files.includes('photo.jpg'), 'New file should still exist');
+    assert.ok(files.includes('photo (1).jpg'), 'Restored file should be safely renamed to photo (1).jpg');
+
+    const newFileContent = await fs.readFile(path.join(testDir, 'photo.jpg'), 'utf8');
+    const restoredContent = await fs.readFile(path.join(testDir, 'photo (1).jpg'), 'utf8');
+
+    assert.equal(newFileContent, 'brand new photo content placed after organize');
+    assert.equal(restoredContent, 'original photo content');
+  } finally {
+    await fs.rm(testDir, { recursive: true, force: true });
+  }
+});

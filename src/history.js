@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import chalk from 'chalk';
+import { getUniqueDestinationPath } from './utils.js';
 
 const HISTORY_FILE = '.cleandrop-history.json';
 
@@ -69,7 +70,18 @@ export async function undoLastRun(targetDir) {
     try {
       // Check if file still exists at the destination
       await fs.access(move.destination);
-      await fs.rename(move.destination, move.source);
+
+      // Safe collision handling: if a new file has appeared at move.source, rename to prevent overwrite
+      let safeSource = move.source;
+      try {
+        await fs.access(move.source);
+        safeSource = await getUniqueDestinationPath(path.dirname(move.source), path.basename(move.source));
+        console.warn(chalk.yellow(`  Notice: Collision detected at ${path.basename(move.source)}. Restored as ${path.basename(safeSource)}`));
+      } catch {
+        // Source path is clear, safe to restore
+      }
+
+      await fs.rename(move.destination, safeSource);
       revertedCount++;
       categoriesToCheck.add(path.dirname(move.destination));
     } catch {
