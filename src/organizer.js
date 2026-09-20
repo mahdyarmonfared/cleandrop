@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import chalk from 'chalk';
-import { IGNORED_NAMES, CATEGORIES, DEFAULT_OTHER_FOLDER } from './config.js';
+import { IGNORED_NAMES, IGNORED_EXTENSIONS, CATEGORIES, DEFAULT_OTHER_FOLDER } from './config.js';
 import { getCategoryForExtension, getUniqueDestinationPath } from './utils.js';
 import { saveHistory } from './history.js';
 
@@ -31,41 +31,45 @@ export async function organizeDirectory(targetDir, options = {}) {
     if (!entry.isFile()) continue;
 
     const fileName = entry.name;
+    const ext = path.extname(fileName).toLowerCase();
 
-    // Skip hidden files and ignored names
-    if (fileName.startsWith('.') || IGNORED_NAMES.has(fileName)) {
+    // Skip hidden files, ignored names, and active in-progress downloads (.crdownload, .part)
+    if (fileName.startsWith('.') || IGNORED_NAMES.has(fileName) || IGNORED_EXTENSIONS.has(ext)) {
       continue;
     }
 
     const sourcePath = path.join(absoluteTarget, fileName);
-    const ext = path.extname(fileName);
     const category = getCategoryForExtension(ext);
     const categoryDir = path.join(absoluteTarget, category);
 
-    // Get file size
-    const fileStat = await fs.stat(sourcePath);
-    totalBytes += fileStat.size;
+    try {
+      // Get file size
+      const fileStat = await fs.stat(sourcePath);
 
-    // Calculate destination path (safely handling duplicate names)
-    let destPath;
-    if (dryRun) {
-      destPath = path.join(categoryDir, fileName);
-    } else {
-      await fs.mkdir(categoryDir, { recursive: true });
-      destPath = await getUniqueDestinationPath(categoryDir, fileName);
-      await fs.rename(sourcePath, destPath);
-    }
+      // Calculate destination path (safely handling duplicate names)
+      let destPath;
+      if (dryRun) {
+        destPath = path.join(categoryDir, fileName);
+      } else {
+        await fs.mkdir(categoryDir, { recursive: true });
+        destPath = await getUniqueDestinationPath(categoryDir, fileName);
+        await fs.rename(sourcePath, destPath);
+      }
 
-    moves.push({
-      name: fileName,
-      source: sourcePath,
-      destination: destPath,
-      category,
-      size: fileStat.size
-    });
+      totalBytes += fileStat.size;
+      moves.push({
+        name: fileName,
+        source: sourcePath,
+        destination: destPath,
+        category,
+        size: fileStat.size
+      });
 
-    if (verbose) {
-      console.log(`  ${chalk.cyan('→')} ${chalk.white(fileName)} ${chalk.gray('➜')} ${chalk.green(category + '/' + path.basename(destPath))}`);
+      if (verbose) {
+        console.log(`  ${chalk.cyan('→')} ${chalk.white(fileName)} ${chalk.gray('➜')} ${chalk.green(category + '/' + path.basename(destPath))}`);
+      }
+    } catch (err) {
+      console.warn(chalk.yellow(`  Warning: Could not process ${fileName} (${err.code || err.message}). Skipping.`));
     }
   }
 

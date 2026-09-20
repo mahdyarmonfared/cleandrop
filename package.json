@@ -1,6 +1,6 @@
 {
   "name": "cleandrop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Smart, safe, and lightning-fast downloads and desktop auto-organizer with dry-run and undo support.",
   "type": "module",
   "main": "src/organizer.js",

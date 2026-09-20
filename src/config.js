@@ -40,4 +40,11 @@ export const IGNORED_NAMES = new Set([
   'thumbs.db'
 ]);
 
+export const IGNORED_EXTENSIONS = new Set([
+  '.crdownload', // Chrome/Edge active downloads
+  '.part',       // Firefox active downloads
+  '.download',   // Safari active downloads
+  '.tmp'         // Temporary files
+]);
+
 export const DEFAULT_OTHER_FOLDER = 'Others';

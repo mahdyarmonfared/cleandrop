@@ -110,3 +110,26 @@ test('CleanDrop undo safely handles collisions if a new file appears at original
     await fs.rm(testDir, { recursive: true, force: true });
   }
 });
+
+test('CleanDrop ignores active browser downloads like .crdownload and .part', async () => {
+  const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cleandrop-downloads-test-'));
+
+  try {
+    await fs.writeFile(path.join(testDir, 'active_video.mp4.crdownload'), 'in progress download content');
+    await fs.writeFile(path.join(testDir, 'archive.zip.part'), 'in progress download content');
+    await fs.writeFile(path.join(testDir, 'normal.pdf'), 'regular document');
+
+    const result = await organizeDirectory(testDir, { dryRun: false });
+
+    // Only the normal file should be moved
+    assert.equal(result.moves.length, 1);
+    assert.equal(result.moves[0].name, 'normal.pdf');
+
+    // Verify in-progress downloads remain untouched in root
+    const rootFiles = await fs.readdir(testDir);
+    assert.ok(rootFiles.includes('active_video.mp4.crdownload'));
+    assert.ok(rootFiles.includes('archive.zip.part'));
+  } finally {
+    await fs.rm(testDir, { recursive: true, force: true });
+  }
+});
