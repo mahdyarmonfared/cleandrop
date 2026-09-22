@@ -28,7 +28,8 @@ export function startWebServer(options = {}) {
 
   const server = http.createServer(async (req, res) => {
     try {
-      const urlPath = req.url === '/' ? '/index.html' : req.url.split('?')[0];
+      const pathname = req.url.split('?')[0];
+      const urlPath = (pathname === '/' || pathname === '') ? '/index.html' : pathname;
       const filePath = path.join(WEB_DIR, urlPath);
 
       if (!filePath.startsWith(WEB_DIR)) {
