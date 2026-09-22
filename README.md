@@ -46,34 +46,34 @@ Messy Folder:                              CleanDrop Magic:
 
 ## 🚀 Quick Start
 
-### Run Instantly via `npx` (No Install Required)
+### Installation & Global Setup
 
 ```bash
-# Preview what would be organized in Downloads
-npx cleandrop ~/Downloads --dry-run
-
-# Organize Downloads folder
-npx cleandrop ~/Downloads
-
-# Launch the visual web dashboard
-npx cleandrop --web
-```
-
-### Global Installation
-
-```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/mahdyarmonfared/cleandrop.git
 cd cleandrop
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Link executable globally
+# 3. Link globally (so you can use `cleandrop` anywhere in your terminal)
 npm link
 ```
 
-Now you can use `cleandrop` anywhere!
+### Running CleanDrop
+
+```bash
+# Preview what would be organized in Downloads (safe dry-run)
+cleandrop ~/Downloads --dry-run
+
+# Organize Downloads folder
+cleandrop ~/Downloads
+
+# Launch the visual web dashboard
+cleandrop --web
+```
+
+> 💡 **Tip:** You can also run it directly inside the repo without linking using `node bin/cleandrop.js [options]`.
 
 ---
 
