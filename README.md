@@ -34,17 +34,30 @@ Messy Folder:                              CleanDrop Magic:
 
 ## ✨ Features
 
-- ⚡ **Lightning Fast:** Processes hundreds of files in milliseconds.
+- ⚡ **Lightning Fast:** Processes hundreds of files in milliseconds with zero memory bloat.
 - 🛡️ **Dry-Run Mode (`-d`):** Preview exactly what will happen before touching a single file on disk.
 - 🔄 **One-Click Undo (`-u`):** Made a mistake? CleanDrop remembers the last run and restores every file to its exact original location.
-- 🔒 **Collision Safe:** Automatically renames duplicates (e.g., `file (1).pdf`) instead of overwriting existing files.
-- 🎨 **Beautiful Terminal UI:** Visual progress spinners, colored categories, and summary metrics.
-- 🌐 **Visual Web Organizer:** Drag-and-drop web dashboard with zero uploads and organized ZIP export.
-- 🧪 **Zero Bloat & Fully Tested:** Built with modern ES Modules and native `node:test`.
+- 🔒 **Collision Safe:** Automatically detects naming conflicts and renames duplicates (e.g., `file (1).pdf`) instead of overwriting existing data.
+- 🌐 **Visual Web Organizer (`--web`):** Drag-and-drop web dashboard with one-click messy demo generation, 100% client-side privacy (zero uploads), and categorized ZIP archive export.
+- 🎨 **Beautiful Terminal UI:** Visual progress spinners, colorful categorization tables, and summary metrics.
+- 🧪 **Zero External Bloat:** Built with native Node.js ES Modules and verified with `node:test`.
 
 ---
 
 ## 🚀 Quick Start
+
+### Run Instantly via `npx` (No Install Required)
+
+```bash
+# Preview what would be organized in Downloads
+npx cleandrop ~/Downloads --dry-run
+
+# Organize Downloads folder
+npx cleandrop ~/Downloads
+
+# Launch the visual web dashboard
+npx cleandrop --web
+```
 
 ### Global Installation
 
@@ -61,19 +74,6 @@ npm link
 ```
 
 Now you can use `cleandrop` anywhere!
-
-### Direct Run
-
-```bash
-# Organize current folder
-node bin/cleandrop.js
-
-# Organize specific directory (e.g., Downloads)
-node bin/cleandrop.js ~/Downloads
-
-# Launch visual browser organizer
-node bin/cleandrop.js --web
-```
 
 ---
 
