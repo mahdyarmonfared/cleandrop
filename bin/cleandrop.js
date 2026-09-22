@@ -8,6 +8,7 @@ import ora from 'ora';
 import { organizeDirectory } from '../src/organizer.js';
 import { undoLastRun } from '../src/history.js';
 import { printSummary } from '../src/utils.js';
+import { startWebServer } from '../src/server.js';
 
 const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 const program = new Command();
@@ -16,11 +17,20 @@ program
   .name('cleandrop')
   .description('⚡ Smart, safe, and lightning-fast downloads and desktop auto-organizer.')
   .version(pkg.version)
-  .argument('[directory]', 'Target directory to organize', '.')
+  .argument('[directory]', 'Target directory to organize (or "web" to launch GUI)', '.')
   .option('-d, --dry-run', 'Preview changes without actually moving any files')
   .option('-u, --undo', 'Undo the last organization run in the specified directory')
   .option('-v, --verbose', 'Print each file operation to stdout')
+  .option('--web [port]', 'Launch browser Web UI interface locally')
   .action(async (directory, options) => {
+    if (options.web || directory === 'web') {
+      const port = typeof options.web === 'string' || typeof options.web === 'number'
+        ? parseInt(options.web, 10)
+        : 3000;
+      await startWebServer({ port });
+      return;
+    }
+
     const targetDir = path.resolve(directory);
 
     console.log(chalk.bold.blue(`\n📦 CleanDrop v${pkg.version}`));

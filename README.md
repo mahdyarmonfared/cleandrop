@@ -39,6 +39,7 @@ Messy Folder:                              CleanDrop Magic:
 - 🔄 **One-Click Undo (`-u`):** Made a mistake? CleanDrop remembers the last run and restores every file to its exact original location.
 - 🔒 **Collision Safe:** Automatically renames duplicates (e.g., `file (1).pdf`) instead of overwriting existing files.
 - 🎨 **Beautiful Terminal UI:** Visual progress spinners, colored categories, and summary metrics.
+- 🌐 **Visual Web Organizer:** Drag-and-drop web dashboard with zero uploads and organized ZIP export.
 - 🧪 **Zero Bloat & Fully Tested:** Built with modern ES Modules and native `node:test`.
 
 ---
@@ -69,6 +70,9 @@ node bin/cleandrop.js
 
 # Organize specific directory (e.g., Downloads)
 node bin/cleandrop.js ~/Downloads
+
+# Launch visual browser organizer
+node bin/cleandrop.js --web
 ```
 
 ---
@@ -86,6 +90,7 @@ cleandrop [directory] [options]
 | `--dry-run` | `-d` | Preview changes without moving any files |
 | `--undo` | `-u` | Undo the last organization run in this directory |
 | `--verbose` | `-v` | Display each file movement in real-time |
+| `--web [port]` | | Launch browser visual organizer locally (default: 3000) |
 | `--help` | `-h` | Show help and options |
 | `--version` | `-V` | Output version number |
 
