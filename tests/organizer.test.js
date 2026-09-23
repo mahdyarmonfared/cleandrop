@@ -133,3 +133,48 @@ test('CleanDrop ignores active browser downloads like .crdownload and .part', as
     await fs.rm(testDir, { recursive: true, force: true });
   }
 });
+
+test('CleanDrop strictly preserves pre-existing subfolders and only organizes loose files', async () => {
+  const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cleandrop-subfolder-test-'));
+
+  try {
+    // 1. Create pre-existing user subfolders with files inside them (e.g. school, sport, background)
+    await fs.mkdir(path.join(testDir, 'school'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'school', 'homework.pdf'), 'school homework');
+
+    await fs.mkdir(path.join(testDir, 'sport'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'sport', 'match.jpg'), 'sport photo');
+
+    await fs.mkdir(path.join(testDir, 'background'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'background', 'wallpaper.png'), 'wallpaper image');
+
+    // 2. Create loose files in root
+    await fs.writeFile(path.join(testDir, 'loose_doc.pdf'), 'loose document');
+    await fs.writeFile(path.join(testDir, 'loose_pic.jpg'), 'loose photo');
+
+    // 3. Run organizer
+    const result = await organizeDirectory(testDir, { dryRun: false });
+
+    // 4. Verify only loose files were moved
+    assert.equal(result.moves.length, 2);
+    assert.deepEqual(result.preservedFolders.sort(), ['background', 'school', 'sport']);
+
+    // 5. Verify pre-existing subfolders and their contents remain intact
+    const schoolFile = await fs.readFile(path.join(testDir, 'school', 'homework.pdf'), 'utf8');
+    const sportFile = await fs.readFile(path.join(testDir, 'sport', 'match.jpg'), 'utf8');
+    const bgFile = await fs.readFile(path.join(testDir, 'background', 'wallpaper.png'), 'utf8');
+
+    assert.equal(schoolFile, 'school homework');
+    assert.equal(sportFile, 'sport photo');
+    assert.equal(bgFile, 'wallpaper image');
+
+    // 6. Verify loose files moved to category folders
+    const organizedDoc = await fs.readFile(path.join(testDir, 'Documents', 'loose_doc.pdf'), 'utf8');
+    const organizedPic = await fs.readFile(path.join(testDir, 'Images', 'loose_pic.jpg'), 'utf8');
+
+    assert.equal(organizedDoc, 'loose document');
+    assert.equal(organizedPic, 'loose photo');
+  } finally {
+    await fs.rm(testDir, { recursive: true, force: true });
+  }
+});

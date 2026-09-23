@@ -78,7 +78,8 @@ export function startWebServer(options = {}) {
           success: true,
           targetDir: target,
           moves: result.moves,
-          totalBytes: result.totalBytes
+          totalBytes: result.totalBytes,
+          preservedFolders: result.preservedFolders || []
         }));
         return;
       }
@@ -94,7 +95,8 @@ export function startWebServer(options = {}) {
           targetDir: target,
           movesCount: result.moves.length,
           totalBytes: result.totalBytes,
-          moves: result.moves
+          moves: result.moves,
+          preservedFolders: result.preservedFolders || []
         }));
         return;
       }

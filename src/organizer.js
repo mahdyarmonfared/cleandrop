@@ -23,11 +23,18 @@ export async function organizeDirectory(targetDir, options = {}) {
   const entries = await fs.readdir(absoluteTarget, { withFileTypes: true });
   const categoryNames = new Set([...Object.keys(CATEGORIES), DEFAULT_OTHER_FOLDER]);
 
+  const preservedFolders = [];
+  for (const entry of entries) {
+    if (entry.isDirectory() && !categoryNames.has(entry.name) && !entry.name.startsWith('.')) {
+      preservedFolders.push(entry.name);
+    }
+  }
+
   const moves = [];
   let totalBytes = 0;
 
   for (const entry of entries) {
-    // Only process files in the top-level of targetDir
+    // Only process loose files in the top-level of targetDir
     if (!entry.isFile()) continue;
 
     const fileName = entry.name;
@@ -81,6 +88,7 @@ export async function organizeDirectory(targetDir, options = {}) {
     targetDir: absoluteTarget,
     moves,
     totalBytes,
-    dryRun
+    dryRun,
+    preservedFolders
   };
 }
