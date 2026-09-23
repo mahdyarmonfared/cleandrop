@@ -48,7 +48,7 @@
     <div class="toolbar">
       <div class="demo-buttons">
         <span class="toolbar-label">Quick Demo:</span>
-        <button type="button" class="btn btn-outline" id="loadDemoBtn">📥 Load Messy Downloads Demo</button>
+        <button type="button" class="btn btn-outline" id="loadDemoBtn">📥 Load Sample Demo Files</button>
       </div>
       <button type="button" class="clear-btn" id="clearBtn">Clear All</button>
     </div>
@@ -57,10 +57,10 @@
     <div class="disk-panel" id="diskPanel">
       <div class="disk-panel-header">
         <div class="disk-title">
-          <span class="disk-icon">🖥️</span>
+          <span class="disk-icon" aria-hidden="true">🖥️</span>
           <div>
             <strong>Organize Folder on Computer</strong>
-            <p class="disk-subtitle">Directly reorganizes files on your hard drive (Zero ZIP extraction needed)</p>
+            <p class="disk-subtitle">Reorganize local directories in place without extracting ZIP archives</p>
           </div>
         </div>
         <div class="disk-presets">
@@ -69,7 +69,7 @@
         </div>
       </div>
       <div class="disk-input-row">
-        <input type="text" class="disk-path-input" id="targetDirInput" placeholder="Path to folder on disk">
+        <input type="text" class="disk-path-input" id="targetDirInput" placeholder="Folder path (e.g. ~/Downloads or /path/to/folder)" aria-label="Target folder path">
         <button type="button" class="btn btn-outline" id="scanDiskBtn">🔍 Scan Folder</button>
         <button type="button" class="btn btn-apply" id="applyDiskBtn">⚡ Apply Changes to Disk</button>
         <button type="button" class="btn btn-undo" id="undoDiskBtn" title="Undo last run">↩️ Undo</button>
@@ -77,25 +77,25 @@
       <div class="disk-options-row">
         <label class="disk-checkbox-label">
           <input type="checkbox" id="reorganizeExistingCheck">
-          <span>Include subfolders (--reorganize-existing)</span>
+          <span>Include subdirectories (--reorganize-existing)</span>
         </label>
       </div>
-      <div class="disk-status-msg hidden" id="diskStatusMsg"></div>
+      <div class="disk-status-msg hidden" id="diskStatusMsg" role="status" aria-live="polite"></div>
     </div>
 
     <!-- Drop Zone -->
-    <section class="drop-zone" id="dropZone">
-      <input type="file" id="fileInput" multiple class="hidden-input" style="display:none">
-      <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden-input" style="display:none">
+    <section class="drop-zone" id="dropZone" role="region" aria-label="File drop zone">
+      <input type="file" id="fileInput" multiple class="hidden-input" style="display:none" aria-label="Choose files">
+      <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden-input" style="display:none" aria-label="Choose folder">
       <div class="drop-content">
-        <div class="drop-icon">
+        <div class="drop-icon" aria-hidden="true">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke="#10b981"/>
             <path d="M12 11v6m-3-3l3-3 3 3" stroke="#34d399" stroke-width="2"/>
           </svg>
         </div>
-        <h2 class="drop-title">Drop your messy files or folder here</h2>
-        <p class="drop-desc">or select directly from your computer (Multiple folders accumulate together):</p>
+        <h2 class="drop-title">Drop files or folders here to organize</h2>
+        <p class="drop-desc">or choose a folder or individual files to organize:</p>
         <div class="drop-actions">
           <button type="button" class="btn btn-browse" id="browseFolderBtn">📁 Select Entire Folder</button>
           <button type="button" class="btn btn-browse-secondary" id="browseFilesBtn">📄 Select Files</button>
@@ -103,10 +103,10 @@
         <div class="drop-options">
           <label class="drop-checkbox-label">
             <input type="checkbox" id="includeSubfoldersCheck" checked>
-            <span>Include files from subfolders (Deep scan)</span>
+            <span>Include files from subdirectories (Recursive scan)</span>
           </label>
         </div>
-        <p class="drop-hints">Drag & drop supports folders recursively. Grouped into Images, Documents, Archives, Code, and Media.</p>
+        <p class="drop-hints">Supports recursive directory scanning. Automatically categorizes into Documents, Images, Videos, Audio, Archives, and Code.</p>
       </div>
     </section>
 

@@ -359,7 +359,7 @@ downloadZipBtn.addEventListener('click', async () => {
   if (organizedFiles.length === 0) return;
 
   const originalText = downloadZipBtn.textContent;
-  downloadZipBtn.textContent = '⏳ Creating Organized ZIP...';
+  downloadZipBtn.textContent = '⏳ Creating Organized ZIP…';
   downloadZipBtn.disabled = true;
 
   try {
@@ -442,7 +442,7 @@ async function scanDiskFolder() {
   if (!targetDir) return;
   const reorganizeExisting = Boolean(document.getElementById('reorganizeExistingCheck')?.checked);
   scanDiskBtn.disabled = true;
-  scanDiskBtn.textContent = 'Scanning...';
+  scanDiskBtn.textContent = '🔍 Scanning…';
 
   try {
     const res = await fetch('/api/scan', {
@@ -493,7 +493,7 @@ async function applyDiskChanges() {
   }
   const reorganizeExisting = Boolean(document.getElementById('reorganizeExistingCheck')?.checked);
   applyDiskBtn.disabled = true;
-  applyDiskBtn.textContent = 'Applying...';
+  applyDiskBtn.textContent = '⚡ Applying…';
   if (applyFromBarBtn) applyFromBarBtn.disabled = true;
 
   try {
@@ -531,7 +531,7 @@ async function undoDiskChanges() {
   const targetDir = targetDirInput.value.trim();
   if (!targetDir) return;
   undoDiskBtn.disabled = true;
-  undoDiskBtn.textContent = 'Undoing...';
+  undoDiskBtn.textContent = '↩️ Undoing…';
 
   try {
     const res = await fetch('/api/undo', {
@@ -558,6 +558,15 @@ if (scanDiskBtn) scanDiskBtn.addEventListener('click', scanDiskFolder);
 if (applyDiskBtn) applyDiskBtn.addEventListener('click', applyDiskChanges);
 if (applyFromBarBtn) applyFromBarBtn.addEventListener('click', applyDiskChanges);
 if (undoDiskBtn) undoDiskBtn.addEventListener('click', undoDiskChanges);
+
+if (targetDirInput) {
+  targetDirInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      scanDiskFolder();
+    }
+  });
+}
 
 // Auto-trigger for URL query parameters (e.g. for screenshots)
 const params = new URLSearchParams(window.location.search);
