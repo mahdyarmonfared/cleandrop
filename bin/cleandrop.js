@@ -26,7 +26,7 @@ program
     if (options.web || directory === 'web') {
       const port = typeof options.web === 'string' || typeof options.web === 'number'
         ? parseInt(options.web, 10)
-        : 3000;
+        : 3001;
       const targetDir = directory && directory !== 'web' ? path.resolve(directory) : process.cwd();
       await startWebServer({ port, targetDir });
       return;

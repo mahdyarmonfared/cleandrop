@@ -90,7 +90,7 @@ cleandrop [directory] [options]
 | `--dry-run` | `-d` | Preview changes without moving any files |
 | `--undo` | `-u` | Undo the last organization run in this directory |
 | `--verbose` | `-v` | Display each file movement in real-time |
-| `--web [port]` | | Launch browser visual organizer locally (default: 3000) |
+| `--web [port]` | | Launch browser visual organizer locally (default: 3001) |
 | `--help` | `-h` | Show help and options |
 | `--version` | `-V` | Output version number |
 

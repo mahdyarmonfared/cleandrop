@@ -44,12 +44,12 @@ function readJsonBody(req) {
 /**
  * Start the built-in CleanDrop Web UI server.
  * @param {object} [options={}]
- * @param {number} [options.port=3000]
+ * @param {number} [options.port=3001]
  * @param {string} [options.targetDir]
  * @returns {Promise<http.Server>}
  */
 export function startWebServer(options = {}) {
-  const port = options.port || 3000;
+  const port = options.port || 3001;
   const initialTargetDir = options.targetDir ? path.resolve(options.targetDir) : path.join(os.homedir(), 'Downloads');
 
   const server = http.createServer(async (req, res) => {
