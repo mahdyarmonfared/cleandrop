@@ -83,8 +83,40 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-// Top-level entry reader: only organizes loose files, leaves pre-existing subfolders intact
+async function readAllEntriesFromDirectory(dirEntry, recursive = true, subfolderNames = new Set()) {
+  const files = [];
+  const reader = dirEntry.createReader();
+  const readBatch = () => new Promise((resolve) => {
+    reader.readEntries((entries) => resolve(entries), () => resolve([]));
+  });
+
+  let entries;
+  do {
+    entries = await readBatch();
+    for (const child of entries) {
+      if (child.isFile) {
+        await new Promise((resolve) => {
+          child.file((file) => {
+            files.push(file);
+            resolve();
+          }, () => resolve());
+        });
+      } else if (child.isDirectory) {
+        subfolderNames.add(child.name);
+        if (recursive) {
+          const nested = await readAllEntriesFromDirectory(child, recursive, subfolderNames);
+          files.push(...nested);
+        }
+      }
+    }
+  } while (entries && entries.length > 0);
+
+  return files;
+}
+
+// Top-level entry reader: supports both recursive deep-scan and loose-only scan
 async function getAllFileEntries(dataTransferItemList) {
+  const includeSubfolders = document.getElementById('includeSubfoldersCheck')?.checked ?? true;
   const fileList = [];
   const preservedFolders = new Set();
 
@@ -102,28 +134,8 @@ async function getAllFileEntries(dataTransferItemList) {
           }, () => resolve());
         });
       } else if (entry.isDirectory) {
-        // Only read immediate children of the dropped folder
-        const reader = entry.createReader();
-        const readBatch = () => new Promise((resolve) => {
-          reader.readEntries((entries) => resolve(entries), () => resolve([]));
-        });
-        let entries;
-        do {
-          entries = await readBatch();
-          for (const child of entries) {
-            if (child.isFile) {
-              await new Promise((resolve) => {
-                child.file((file) => {
-                  fileList.push(file);
-                  resolve();
-                }, () => resolve());
-              });
-            } else if (child.isDirectory) {
-              // Pre-existing subfolder (e.g. school, sport) -> DO NOT recurse, keep untouched!
-              preservedFolders.add(child.name);
-            }
-          }
-        } while (entries && entries.length > 0);
+        const files = await readAllEntriesFromDirectory(entry, includeSubfolders, preservedFolders);
+        fileList.push(...files);
       }
     } else if (item.getAsFile) {
       const file = item.getAsFile();
@@ -132,7 +144,11 @@ async function getAllFileEntries(dataTransferItemList) {
   }
 
   if (preservedFolders.size > 0) {
-    showDiskStatus(`🛡️ <strong>Preserved Existing Folders:</strong> Left <code>${Array.from(preservedFolders).join(', ')}</code> completely untouched. Only loose files were organized.`, 'success');
+    if (includeSubfolders) {
+      showDiskStatus(`📂 Loaded <strong>${fileList.length}</strong> file(s) across categories (including subfolder(s): <code>${Array.from(preservedFolders).join(', ')}</code>).`, 'success');
+    } else {
+      showDiskStatus(`🛡️ <strong>Preserved Existing Folders:</strong> Left <code>${Array.from(preservedFolders).join(', ')}</code> untouched. Only loose files were loaded.`, 'success');
+    }
   }
 
   return fileList;
@@ -175,41 +191,64 @@ browseFilesBtn.addEventListener('click', (e) => {
 });
 
 dropZone.addEventListener('click', (e) => {
-  if (!e.target.closest('button')) {
+  if (!e.target.closest('button') && !e.target.closest('label') && !e.target.closest('input')) {
     folderInput.click();
   }
 });
 
 folderInput.addEventListener('change', (e) => {
   const allIncoming = Array.from(e.target.files);
+  const includeSubfolders = document.getElementById('includeSubfoldersCheck')?.checked ?? true;
   const looseFiles = [];
+  const nestedFiles = [];
   const preservedFolders = new Set();
 
   for (const file of allIncoming) {
     if (file.webkitRelativePath) {
       const parts = file.webkitRelativePath.split('/');
-      // parts[0] is root folder name (e.g. "Images")
-      // parts[1] is filename if loose, or subfolder name if nested!
+      // parts[0] is root folder name (e.g. "Pictures")
       if (parts.length === 2) {
         // Loose file in root folder
         looseFiles.push(file);
       } else if (parts.length > 2) {
-        // File is inside an existing subfolder (e.g. Images/school/photo.jpg) -> preserve!
+        // File is inside a subfolder (e.g. Pictures/New Folder/photo.jpg)
+        nestedFiles.push(file);
         preservedFolders.add(parts[1]);
+      } else {
+        looseFiles.push(file);
       }
     } else {
       looseFiles.push(file);
     }
   }
 
-  if (preservedFolders.size > 0) {
-    showDiskStatus(`🛡️ <strong>Preserved Existing Folders:</strong> Left <code>${Array.from(preservedFolders).join(', ')}</code> completely untouched. Only loose files were organized.`, 'success');
-  }
-
-  if (looseFiles.length > 0) {
-    organizeFiles(looseFiles);
-  } else if (allIncoming.length > 0 && looseFiles.length === 0) {
-    showDiskStatus(`✨ All files are already organized inside subfolders (<code>${Array.from(preservedFolders).join(', ')}</code>). No loose files found to organize!`, 'success');
+  if (includeSubfolders) {
+    if (allIncoming.length > 0) {
+      organizeFiles(allIncoming);
+      if (preservedFolders.size > 0) {
+        showDiskStatus(`📂 Loaded <strong>${allIncoming.length}</strong> file(s) across categories (including subfolder(s): <code>${Array.from(preservedFolders).join(', ')}</code>).`, 'success');
+      }
+    }
+  } else {
+    if (looseFiles.length > 0) {
+      organizeFiles(looseFiles);
+      if (preservedFolders.size > 0) {
+        showDiskStatus(`🛡️ <strong>Preserved Existing Folders:</strong> Left <code>${Array.from(preservedFolders).join(', ')}</code> untouched (${nestedFiles.length} file(s)). Only loose files were organized.`, 'success');
+      }
+    } else if (nestedFiles.length > 0) {
+      showDiskStatus(`⚠️ Found <strong>${nestedFiles.length}</strong> file(s) inside subfolder(s) (<code>${Array.from(preservedFolders).join(', ')}</code>). Check <strong>"Include files from subfolders"</strong> to load them, or <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 11px; margin-left: 6px;" id="forceIncludeBtn">Load all ${nestedFiles.length} files</button>`, 'success');
+      setTimeout(() => {
+        const forceBtn = document.getElementById('forceIncludeBtn');
+        if (forceBtn) {
+          forceBtn.onclick = () => {
+            const check = document.getElementById('includeSubfoldersCheck');
+            if (check) check.checked = true;
+            organizeFiles(allIncoming);
+            showDiskStatus(`📂 Loaded <strong>${allIncoming.length}</strong> file(s) including subfolders!`, 'success');
+          };
+        }
+      }, 50);
+    }
   }
 
   folderInput.value = '';
@@ -401,6 +440,7 @@ function showDiskStatus(message, type = 'success') {
 async function scanDiskFolder() {
   const targetDir = targetDirInput.value.trim();
   if (!targetDir) return;
+  const reorganizeExisting = Boolean(document.getElementById('reorganizeExistingCheck')?.checked);
   scanDiskBtn.disabled = true;
   scanDiskBtn.textContent = 'Scanning...';
 
@@ -408,7 +448,7 @@ async function scanDiskFolder() {
     const res = await fetch('/api/scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetDir })
+      body: JSON.stringify({ targetDir, reorganizeExisting })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Failed to scan folder');
@@ -419,12 +459,16 @@ async function scanDiskFolder() {
     }
 
     if (data.moves.length === 0) {
-      showDiskStatus(`✨ Folder <strong>${escapeHtml(data.targetDir)}</strong> is already clean! No loose files found.${preservedNote}`, 'success');
+      if (data.subfolderFileCount > 0 && !reorganizeExisting) {
+        showDiskStatus(`Found 0 loose files, but <strong>${data.subfolderFileCount}</strong> file(s) exist inside subfolder(s) (<code>${data.preservedFolders.join(', ')}</code>).<br>👉 Check <strong>"Include subfolders (--reorganize-existing)"</strong> below and scan again to organize them.`, 'success');
+      } else {
+        showDiskStatus(`✨ Folder <strong>${escapeHtml(data.targetDir)}</strong> is already clean! No loose files found.${preservedNote}`, 'success');
+      }
       accumulatedFiles = [];
       metricsBar.classList.add('hidden');
       categoriesGrid.classList.add('hidden');
     } else {
-      showDiskStatus(`Found <strong>${data.moves.length}</strong> loose file(s) in <strong>${escapeHtml(data.targetDir)}</strong> (${formatBytes(data.totalBytes)}) ready to organize.${preservedNote}`, 'success');
+      showDiskStatus(`Found <strong>${data.moves.length}</strong> file(s) in <strong>${escapeHtml(data.targetDir)}</strong> (${formatBytes(data.totalBytes)}) ready to organize.${preservedNote}`, 'success');
       const mockFiles = data.moves.map(m => ({
         name: m.name,
         size: m.size || 1024,
@@ -447,6 +491,7 @@ async function applyDiskChanges() {
     alert('Please enter or select a folder path.');
     return;
   }
+  const reorganizeExisting = Boolean(document.getElementById('reorganizeExistingCheck')?.checked);
   applyDiskBtn.disabled = true;
   applyDiskBtn.textContent = 'Applying...';
   if (applyFromBarBtn) applyFromBarBtn.disabled = true;
@@ -455,7 +500,7 @@ async function applyDiskChanges() {
     const res = await fetch('/api/apply', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetDir })
+      body: JSON.stringify({ targetDir, reorganizeExisting })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Failed to apply organization');
@@ -466,7 +511,7 @@ async function applyDiskChanges() {
     }
 
     if (data.movesCount === 0) {
-      showDiskStatus(`✨ Folder is already organized! No loose files moved.${preservedNote}`, 'success');
+      showDiskStatus(`✨ Folder is already organized! No files moved.${preservedNote}`, 'success');
     } else {
       showDiskStatus(`🎉 <strong>Success!</strong> Organized <strong>${data.movesCount} file(s)</strong> (${formatBytes(data.totalBytes)}) directly on your computer into Images, Documents, etc. <button type="button" class="preset-btn" style="margin-left:8px" id="inlineUndoBtn">↩️ Undo Changes</button>${preservedNote}`, 'success');
       const inlineUndoBtn = document.getElementById('inlineUndoBtn');

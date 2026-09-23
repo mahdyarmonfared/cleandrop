@@ -74,6 +74,12 @@
         <button type="button" class="btn btn-apply" id="applyDiskBtn">⚡ Apply Changes to Disk</button>
         <button type="button" class="btn btn-undo" id="undoDiskBtn" title="Undo last run">↩️ Undo</button>
       </div>
+      <div class="disk-options-row">
+        <label class="disk-checkbox-label">
+          <input type="checkbox" id="reorganizeExistingCheck">
+          <span>Include subfolders (--reorganize-existing)</span>
+        </label>
+      </div>
       <div class="disk-status-msg hidden" id="diskStatusMsg"></div>
     </div>
 
@@ -93,6 +99,12 @@
         <div class="drop-actions">
           <button type="button" class="btn btn-browse" id="browseFolderBtn">📁 Select Entire Folder</button>
           <button type="button" class="btn btn-browse-secondary" id="browseFilesBtn">📄 Select Files</button>
+        </div>
+        <div class="drop-options">
+          <label class="drop-checkbox-label">
+            <input type="checkbox" id="includeSubfoldersCheck" checked>
+            <span>Include files from subfolders (Deep scan)</span>
+          </label>
         </div>
         <p class="drop-hints">Drag & drop supports folders recursively. Grouped into Images, Documents, Archives, Code, and Media.</p>
       </div>

@@ -178,3 +178,41 @@ test('CleanDrop strictly preserves pre-existing subfolders and only organizes lo
     await fs.rm(testDir, { recursive: true, force: true });
   }
 });
+
+test('CleanDrop organizes files inside subfolders when reorganizeExisting is true, and undo restores them', async () => {
+  const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cleandrop-reorganize-existing-test-'));
+
+  try {
+    // 1. Create subfolder with files inside (like Pictures/New Folder/photo.jpg)
+    await fs.mkdir(path.join(testDir, 'New Folder'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'New Folder', 'spider.jpg'), 'spider image');
+    await fs.writeFile(path.join(testDir, 'New Folder', 'notes.txt'), 'notes text');
+
+    // 2. Scan with reorganizeExisting: false -> should preserve subfolder
+    const scanDefault = await organizeDirectory(testDir, { dryRun: true, reorganizeExisting: false });
+    assert.equal(scanDefault.moves.length, 0);
+    assert.equal(scanDefault.subfolderFileCount, 2);
+    assert.deepEqual(scanDefault.preservedFolders, ['New Folder']);
+
+    // 3. Organize with reorganizeExisting: true -> should move files to Images and Documents
+    const organizeResult = await organizeDirectory(testDir, { dryRun: false, reorganizeExisting: true });
+    assert.equal(organizeResult.moves.length, 2);
+
+    const imgExists = await fs.stat(path.join(testDir, 'Images', 'spider.jpg')).then(() => true).catch(() => false);
+    const docExists = await fs.stat(path.join(testDir, 'Documents', 'notes.txt')).then(() => true).catch(() => false);
+    assert.ok(imgExists, 'Images/spider.jpg should exist');
+    assert.ok(docExists, 'Documents/notes.txt should exist');
+
+    // 4. Test Undo -> should restore files back into 'New Folder'
+    const undoResult = await undoLastRun(testDir);
+    assert.ok(undoResult.success);
+    assert.equal(undoResult.revertedCount, 2);
+
+    const restoredImg = await fs.readFile(path.join(testDir, 'New Folder', 'spider.jpg'), 'utf8');
+    const restoredNotes = await fs.readFile(path.join(testDir, 'New Folder', 'notes.txt'), 'utf8');
+    assert.equal(restoredImg, 'spider image');
+    assert.equal(restoredNotes, 'notes text');
+  } finally {
+    await fs.rm(testDir, { recursive: true, force: true });
+  }
+});

@@ -72,14 +72,18 @@ export function startWebServer(options = {}) {
       if (req.method === 'POST' && pathname === '/api/scan') {
         const data = await readJsonBody(req);
         const target = path.resolve(data.targetDir || initialTargetDir);
-        const result = await organizeDirectory(target, { dryRun: true });
+        const reorganizeExisting = Boolean(data.reorganizeExisting);
+        const result = await organizeDirectory(target, { dryRun: true, reorganizeExisting });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: true,
           targetDir: target,
           moves: result.moves,
           totalBytes: result.totalBytes,
-          preservedFolders: result.preservedFolders || []
+          preservedFolders: result.preservedFolders || [],
+          subfolderFileCount: result.subfolderFileCount || 0,
+          subfolderTotalBytes: result.subfolderTotalBytes || 0,
+          reorganizeExisting: result.reorganizeExisting
         }));
         return;
       }
@@ -88,7 +92,8 @@ export function startWebServer(options = {}) {
       if (req.method === 'POST' && pathname === '/api/apply') {
         const data = await readJsonBody(req);
         const target = path.resolve(data.targetDir || initialTargetDir);
-        const result = await organizeDirectory(target, { dryRun: false });
+        const reorganizeExisting = Boolean(data.reorganizeExisting);
+        const result = await organizeDirectory(target, { dryRun: false, reorganizeExisting });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: true,
@@ -96,7 +101,10 @@ export function startWebServer(options = {}) {
           movesCount: result.moves.length,
           totalBytes: result.totalBytes,
           moves: result.moves,
-          preservedFolders: result.preservedFolders || []
+          preservedFolders: result.preservedFolders || [],
+          subfolderFileCount: result.subfolderFileCount || 0,
+          subfolderTotalBytes: result.subfolderTotalBytes || 0,
+          reorganizeExisting: result.reorganizeExisting
         }));
         return;
       }

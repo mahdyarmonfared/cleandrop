@@ -21,6 +21,7 @@ program
   .option('-d, --dry-run', 'Preview changes without actually moving any files')
   .option('-u, --undo', 'Undo the last organization run in the specified directory')
   .option('-v, --verbose', 'Print each file operation to stdout')
+  .option('-r, --reorganize-existing', 'Also reorganize files found inside pre-existing subfolders')
   .option('--web [port]', 'Launch browser Web UI interface locally')
   .action(async (directory, options) => {
     if (options.web || directory === 'web') {
@@ -71,7 +72,8 @@ program
 
       const result = await organizeDirectory(targetDir, {
         dryRun: options.dryRun,
-        verbose: options.verbose
+        verbose: options.verbose,
+        reorganizeExisting: Boolean(options.reorganizeExisting)
       });
 
       if (!options.verbose) {

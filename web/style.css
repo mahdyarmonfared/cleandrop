@@ -287,6 +287,46 @@ body {
   border-color: #fbbf24;
 }
 
+.disk-options-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.disk-checkbox-label,
+.drop-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.disk-checkbox-label:hover,
+.drop-checkbox-label:hover {
+  color: var(--text-main);
+}
+
+.disk-checkbox-label input[type="checkbox"],
+.drop-checkbox-label input[type="checkbox"] {
+  accent-color: #10b981;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.drop-options {
+  margin: 8px 0 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 5;
+}
+
 .disk-status-msg {
   margin-top: 12px;
   padding: 10px 14px;

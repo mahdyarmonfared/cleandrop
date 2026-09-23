@@ -81,6 +81,7 @@ export async function undoLastRun(targetDir) {
         // Source path is clear, safe to restore
       }
 
+      await fs.mkdir(path.dirname(safeSource), { recursive: true });
       await fs.rename(move.destination, safeSource);
       revertedCount++;
       categoriesToCheck.add(path.dirname(move.destination));
