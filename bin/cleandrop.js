@@ -27,22 +27,30 @@ program
       const port = typeof options.web === 'string' || typeof options.web === 'number'
         ? parseInt(options.web, 10)
         : 3000;
-      await startWebServer({ port });
+      const targetDir = directory && directory !== 'web' ? path.resolve(directory) : process.cwd();
+      await startWebServer({ port, targetDir });
       return;
     }
 
-    const targetDir = path.resolve(directory);
+    const isUndo = options.undo || directory === 'undo' || process.argv.includes('undo');
+    let targetDir;
+    if (directory === 'undo') {
+      const secondArg = process.argv[3];
+      targetDir = secondArg && !secondArg.startsWith('-') ? path.resolve(secondArg) : process.cwd();
+    } else {
+      targetDir = path.resolve(directory);
+    }
 
     console.log(chalk.bold.blue(`\n📦 CleanDrop v${pkg.version}`));
     console.log(chalk.gray(`Target: ${targetDir}\n`));
 
     // Handle Undo
-    if (options.undo) {
+    if (isUndo) {
       const spinner = ora('Undoing previous organization...').start();
       try {
         const result = await undoLastRun(targetDir);
         if (result.success) {
-          spinner.succeed(chalk.green(`Successfully restored ${result.revertedCount} of ${result.totalCount} file(s)!`));
+          spinner.succeed(chalk.green(`Successfully restored ${result.revertedCount} of ${result.totalCount} file(s) back to original locations!`));
         } else {
           spinner.warn(chalk.yellow(result.message));
         }

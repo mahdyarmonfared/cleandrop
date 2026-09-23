@@ -1,6 +1,7 @@
 /**
  * CleanDrop Web UI
- * 100% Client-Side Visual Folder Organizer & Clutter Cleaner
+ * Visual Folder Organizer & Clutter Cleaner
+ * Supports both Client-Side Drag-and-Drop and Direct System Disk Organization
  */
 
 const dropZone = document.getElementById('dropZone');
@@ -17,7 +18,19 @@ const statCategories = document.getElementById('statCategories');
 const categoriesGrid = document.getElementById('categoriesGrid');
 const downloadZipBtn = document.getElementById('downloadZipBtn');
 
+// Disk Organizer elements
+const targetDirInput = document.getElementById('targetDirInput');
+const presetDownloads = document.getElementById('presetDownloads');
+const presetDesktop = document.getElementById('presetDesktop');
+const scanDiskBtn = document.getElementById('scanDiskBtn');
+const applyDiskBtn = document.getElementById('applyDiskBtn');
+const applyFromBarBtn = document.getElementById('applyFromBarBtn');
+const undoDiskBtn = document.getElementById('undoDiskBtn');
+const diskStatusMsg = document.getElementById('diskStatusMsg');
+
+let accumulatedFiles = [];
 let organizedFiles = [];
+let defaultPaths = {};
 
 const CATEGORIES = {
   Images: {
@@ -58,6 +71,15 @@ function getCategory(filename) {
     }
   }
   return { name: 'Other', icon: '📁' };
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 // Recursive entry reader for folder drag-and-drop
@@ -157,11 +179,24 @@ fileInput.addEventListener('change', (e) => {
   fileInput.value = '';
 });
 
+/**
+ * Organizes files into categories, accumulating new selections
+ */
 function organizeFiles(files) {
+  // Merge new files into accumulatedFiles (deduplicating identical entries)
+  const existingKeys = new Set(accumulatedFiles.map(f => `${f.name}-${f.size}-${f.lastModified || 0}`));
+  for (const f of files) {
+    const key = `${f.name}-${f.size}-${f.lastModified || 0}`;
+    if (!existingKeys.has(key)) {
+      accumulatedFiles.push(f);
+      existingKeys.add(key);
+    }
+  }
+
   const groups = new Map();
   let totalBytes = 0;
 
-  files.forEach(f => {
+  accumulatedFiles.forEach(f => {
     const cat = getCategory(f.name);
     if (!groups.has(cat.name)) {
       groups.set(cat.name, {
@@ -176,8 +211,8 @@ function organizeFiles(files) {
     totalBytes += f.size;
   });
 
-  organizedFiles = files;
-  renderGrid(Array.from(groups.values()), files.length, totalBytes);
+  organizedFiles = accumulatedFiles;
+  renderGrid(Array.from(groups.values()), accumulatedFiles.length, totalBytes);
 }
 
 function renderGrid(groups, totalCount, totalBytes) {
@@ -198,7 +233,7 @@ function renderGrid(groups, totalCount, totalBytes) {
     group.files.forEach(file => {
       filesHtml += `
         <div class="file-item">
-          <span class="file-name" title="${file.name}">${file.name}</span>
+          <span class="file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
           <span class="file-size">${formatBytes(file.size)}</span>
         </div>
       `;
@@ -270,15 +305,165 @@ downloadZipBtn.addEventListener('click', async () => {
 });
 
 clearBtn.addEventListener('click', () => {
+  accumulatedFiles = [];
   organizedFiles = [];
   metricsBar.classList.add('hidden');
   categoriesGrid.classList.add('hidden');
+  categoriesGrid.innerHTML = '';
   fileInput.value = '';
+  folderInput.value = '';
+  if (diskStatusMsg) diskStatusMsg.classList.add('hidden');
 });
+
+// System Disk Organizer Integration
+async function initSystemStatus() {
+  try {
+    const res = await fetch('/api/status');
+    if (res.ok) {
+      defaultPaths = await res.json();
+      if (targetDirInput && !targetDirInput.value) {
+        targetDirInput.value = defaultPaths.targetDir || defaultPaths.defaultDownloads || '';
+      }
+    }
+  } catch {
+    // Statically hosted
+  }
+}
+initSystemStatus();
+
+if (presetDownloads) {
+  presetDownloads.addEventListener('click', () => {
+    if (defaultPaths.defaultDownloads) {
+      targetDirInput.value = defaultPaths.defaultDownloads;
+      scanDiskFolder();
+    }
+  });
+}
+
+if (presetDesktop) {
+  presetDesktop.addEventListener('click', () => {
+    if (defaultPaths.defaultDesktop) {
+      targetDirInput.value = defaultPaths.defaultDesktop;
+      scanDiskFolder();
+    }
+  });
+}
+
+function showDiskStatus(message, type = 'success') {
+  if (!diskStatusMsg) return;
+  diskStatusMsg.className = `disk-status-msg ${type}`;
+  diskStatusMsg.innerHTML = message;
+  diskStatusMsg.classList.remove('hidden');
+}
+
+async function scanDiskFolder() {
+  const targetDir = targetDirInput.value.trim();
+  if (!targetDir) return;
+  scanDiskBtn.disabled = true;
+  scanDiskBtn.textContent = 'Scanning...';
+
+  try {
+    const res = await fetch('/api/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetDir })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Failed to scan folder');
+
+    if (data.moves.length === 0) {
+      showDiskStatus(`✨ Folder <strong>${escapeHtml(data.targetDir)}</strong> is already clean! No loose files found.`, 'success');
+      accumulatedFiles = [];
+      metricsBar.classList.add('hidden');
+      categoriesGrid.classList.add('hidden');
+    } else {
+      showDiskStatus(`Found <strong>${data.moves.length}</strong> loose file(s) in <strong>${escapeHtml(data.targetDir)}</strong> (${formatBytes(data.totalBytes)}) ready to organize.`, 'success');
+      const mockFiles = data.moves.map(m => ({
+        name: m.name,
+        size: m.size || 1024,
+        lastModified: Date.now()
+      }));
+      accumulatedFiles = [];
+      organizeFiles(mockFiles);
+    }
+  } catch (err) {
+    showDiskStatus(`❌ Scan error: ${escapeHtml(err.message)}`, 'error');
+  } finally {
+    scanDiskBtn.disabled = false;
+    scanDiskBtn.textContent = '🔍 Scan Folder';
+  }
+}
+
+async function applyDiskChanges() {
+  const targetDir = targetDirInput.value.trim();
+  if (!targetDir) {
+    alert('Please enter or select a folder path.');
+    return;
+  }
+  applyDiskBtn.disabled = true;
+  applyDiskBtn.textContent = 'Applying...';
+  if (applyFromBarBtn) applyFromBarBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetDir })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Failed to apply organization');
+
+    if (data.movesCount === 0) {
+      showDiskStatus(`✨ Folder is already organized! No loose files moved.`, 'success');
+    } else {
+      showDiskStatus(`🎉 <strong>Success!</strong> Organized <strong>${data.movesCount} file(s)</strong> (${formatBytes(data.totalBytes)}) directly on your computer into Images, Documents, etc. <button type="button" class="preset-btn" style="margin-left:8px" id="inlineUndoBtn">↩️ Undo Changes</button>`, 'success');
+      const inlineUndoBtn = document.getElementById('inlineUndoBtn');
+      if (inlineUndoBtn) inlineUndoBtn.addEventListener('click', undoDiskChanges);
+      scanDiskFolder();
+    }
+  } catch (err) {
+    showDiskStatus(`❌ Error applying changes: ${escapeHtml(err.message)}`, 'error');
+  } finally {
+    applyDiskBtn.disabled = false;
+    applyDiskBtn.textContent = '⚡ Apply Changes to Disk';
+    if (applyFromBarBtn) applyFromBarBtn.disabled = false;
+  }
+}
+
+async function undoDiskChanges() {
+  const targetDir = targetDirInput.value.trim();
+  if (!targetDir) return;
+  undoDiskBtn.disabled = true;
+  undoDiskBtn.textContent = 'Undoing...';
+
+  try {
+    const res = await fetch('/api/undo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetDir })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      showDiskStatus(`ℹ️ ${escapeHtml(data.message || 'No actions to undo.')}`, 'error');
+    } else {
+      showDiskStatus(`↩️ <strong>Restored!</strong> Successfully moved <strong>${data.revertedCount} file(s)</strong> back to their original locations.`, 'success');
+      scanDiskFolder();
+    }
+  } catch (err) {
+    showDiskStatus(`❌ Undo error: ${escapeHtml(err.message)}`, 'error');
+  } finally {
+    undoDiskBtn.disabled = false;
+    undoDiskBtn.textContent = '↩️ Undo';
+  }
+}
+
+if (scanDiskBtn) scanDiskBtn.addEventListener('click', scanDiskFolder);
+if (applyDiskBtn) applyDiskBtn.addEventListener('click', applyDiskChanges);
+if (applyFromBarBtn) applyFromBarBtn.addEventListener('click', applyDiskChanges);
+if (undoDiskBtn) undoDiskBtn.addEventListener('click', undoDiskChanges);
 
 // Auto-trigger for URL query parameters (e.g. for screenshots)
 const params = new URLSearchParams(window.location.search);
 if (params.has('demo')) {
   setTimeout(() => loadDemoBtn?.click(), 100);
 }
-

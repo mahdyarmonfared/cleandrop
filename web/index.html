@@ -53,6 +53,30 @@
       <button type="button" class="clear-btn" id="clearBtn">Clear All</button>
     </div>
 
+    <!-- Direct Disk Organizer Panel -->
+    <div class="disk-panel" id="diskPanel">
+      <div class="disk-panel-header">
+        <div class="disk-title">
+          <span class="disk-icon">🖥️</span>
+          <div>
+            <strong>Organize Folder on Computer</strong>
+            <p class="disk-subtitle">Directly reorganizes files on your hard drive (Zero ZIP extraction needed)</p>
+          </div>
+        </div>
+        <div class="disk-presets">
+          <button type="button" class="preset-btn" id="presetDownloads">📂 Downloads</button>
+          <button type="button" class="preset-btn" id="presetDesktop">🖥️ Desktop</button>
+        </div>
+      </div>
+      <div class="disk-input-row">
+        <input type="text" class="disk-path-input" id="targetDirInput" placeholder="Path to folder on disk">
+        <button type="button" class="btn btn-outline" id="scanDiskBtn">🔍 Scan Folder</button>
+        <button type="button" class="btn btn-apply" id="applyDiskBtn">⚡ Apply Changes to Disk</button>
+        <button type="button" class="btn btn-undo" id="undoDiskBtn" title="Undo last run">↩️ Undo</button>
+      </div>
+      <div class="disk-status-msg hidden" id="diskStatusMsg"></div>
+    </div>
+
     <!-- Drop Zone -->
     <section class="drop-zone" id="dropZone">
       <input type="file" id="fileInput" multiple class="hidden-input" style="display:none">
@@ -65,7 +89,7 @@
           </svg>
         </div>
         <h2 class="drop-title">Drop your messy files or folder here</h2>
-        <p class="drop-desc">or select directly from your computer:</p>
+        <p class="drop-desc">or select directly from your computer (Multiple folders accumulate together):</p>
         <div class="drop-actions">
           <button type="button" class="btn btn-browse" id="browseFolderBtn">📁 Select Entire Folder</button>
           <button type="button" class="btn btn-browse-secondary" id="browseFilesBtn">📄 Select Files</button>
@@ -88,9 +112,14 @@
         <span class="metric-label">Organized Folders:</span>
         <strong id="statCategories">0</strong>
       </div>
-      <button type="button" class="btn btn-primary" id="downloadZipBtn">
-        📦 Download Organized ZIP
-      </button>
+      <div class="metric-actions">
+        <button type="button" class="btn btn-apply" id="applyFromBarBtn">
+          ⚡ Apply Changes to Disk
+        </button>
+        <button type="button" class="btn btn-outline" id="downloadZipBtn">
+          📦 Download ZIP
+        </button>
+      </div>
     </div>
 
     <!-- Organized Categories Grid -->
