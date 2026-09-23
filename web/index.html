@@ -55,7 +55,8 @@
 
     <!-- Drop Zone -->
     <section class="drop-zone" id="dropZone">
-      <input type="file" id="fileInput" multiple class="file-input">
+      <input type="file" id="fileInput" multiple class="hidden-input" style="display:none">
+      <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden-input" style="display:none">
       <div class="drop-content">
         <div class="drop-icon">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -63,9 +64,13 @@
             <path d="M12 11v6m-3-3l3-3 3 3" stroke="#34d399" stroke-width="2"/>
           </svg>
         </div>
-        <h2 class="drop-title">Drop your messy files here to organize</h2>
-        <p class="drop-desc">or <span class="highlight">browse files</span> from your computer</p>
-        <p class="drop-hints">Files are automatically grouped into Images, Documents, Archives, Code, and Media.</p>
+        <h2 class="drop-title">Drop your messy files or folder here</h2>
+        <p class="drop-desc">or select directly from your computer:</p>
+        <div class="drop-actions">
+          <button type="button" class="btn btn-browse" id="browseFolderBtn">📁 Select Entire Folder</button>
+          <button type="button" class="btn btn-browse-secondary" id="browseFilesBtn">📄 Select Files</button>
+        </div>
+        <p class="drop-hints">Drag & drop supports folders recursively. Grouped into Images, Documents, Archives, Code, and Media.</p>
       </div>
     </section>
 
