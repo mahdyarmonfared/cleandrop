@@ -38,6 +38,7 @@ Messy Folder:                              CleanDrop Magic:
 - 🛡️ **Dry-Run Mode (`-d`):** Preview exactly what will happen before touching a single file on disk.
 - 🔄 **One-Click Undo (`-u`):** Made a mistake? CleanDrop remembers the last run and restores every file to its exact original location.
 - 🔒 **Collision Safe:** Automatically detects naming conflicts and renames duplicates (e.g., `file (1).pdf`) instead of overwriting existing data.
+- 📁 **Preserves Existing Folders:** Strictly organizes loose files in the root folder, keeping custom subfolders (e.g. `school/`, `sport/`) 100% untouched.
 - 🌐 **Visual Web Organizer (`--web`):** Drag-and-drop web dashboard with one-click messy demo generation, 100% client-side privacy (zero uploads), and categorized ZIP archive export.
 - 🎨 **Beautiful Terminal UI:** Visual progress spinners, colorful categorization tables, and summary metrics.
 - 🧪 **Zero External Bloat:** Built with native Node.js ES Modules and verified with `node:test`.
